@@ -523,6 +523,7 @@ function buildReflectionPayload(){
     `Round by round: ${player.history.map(h=>'R'+(h.round+1)+' €'+h.revenue+'k').join(' · ')}.`,
   ].join('\n');
   return {
+    submitter: player.name,        // the shared EmailJS subject reads "submission from {{submitter}}: {{game_name}}"
     student_name: player.name,
     student_email: player.email,
     game_name: GAME_NAME,
