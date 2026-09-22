@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Remix — Solo Practice</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<style>
+* { box-sizing:border-box; margin:0; padding:0; }
+body { background:linear-gradient(160deg,#f5f0e8 0%,#eee8da 100%); color:#1a1a1a;
+  font-family:'Inter',system-ui,sans-serif; min-height:100vh; line-height:1.5; }
+.hidden { display:none !important; }
+.container { max-width:900px; margin:0 auto; padding:20px 22px 64px; }
+.mono { font-family:'IBM Plex Mono',monospace; } .muted { color:#777; } .center { text-align:center; }
+h1,h2,h3 { font-weight:700; line-height:1.25; }
+h3 { font-size:0.85rem; margin-bottom:12px; letter-spacing:0.04em; display:inline;
+  background:linear-gradient(transparent 55%,#fde68a 55%); padding:0 4px; }
+.card { border:2px solid #444; border-radius:14px; padding:20px; margin-bottom:16px; background:#fff; box-shadow:3px 3px 0 #ccc5b8; }
+button,.btn { background:transparent; border:2px solid #555; padding:10px 26px; font-family:inherit; letter-spacing:0.04em;
+  cursor:pointer; font-size:0.85rem; font-weight:600; color:#1a1a1a; border-radius:10px; transition:all .15s; box-shadow:2px 2px 0 #ccc5b8; }
+button:hover:not(:disabled) { transform:translate(-1px,-1px); box-shadow:3px 3px 0 #ccc5b8; }
+button:active:not(:disabled) { transform:translate(2px,2px); box-shadow:1px 1px 0 #ccc5b8; }
+button:disabled { opacity:.3; cursor:not-allowed; }
+button.primary { background:#2563EB; color:#fff; border:2.5px solid #1a1a1a; box-shadow:3px 3px 0 #1a1a1a; }
+button.primary:hover:not(:disabled) { background:#1d4ed8; box-shadow:5px 5px 0 #1a1a1a; }
+button.sm { padding:6px 14px; font-size:0.72rem; }
+input[type=text],input[type=email] { width:100%; padding:12px 14px; border:2px solid #d0ccc4; border-radius:10px; font-family:inherit; font-size:0.92rem; outline:none; }
+input:focus,textarea:focus { border-color:#2563EB; }
+textarea { width:100%; padding:12px 14px; border:2px solid #d0ccc4; border-radius:10px; font-family:inherit; font-size:0.92rem; min-height:78px; resize:vertical; line-height:1.55; }
+
+/* intro / register */
+.intro-inner { background:#fff; border-radius:16px; padding:48px 40px 40px; border:2.5px solid #444; box-shadow:4px 4px 0 #ccc5b8;
+  max-width:540px; margin:34px auto; text-align:center; transform:rotate(-0.6deg); }
+.intro-the { font-size:1rem; color:#888; letter-spacing:.08em; }
+.intro-title { font-size:clamp(34px,7vw,52px); font-weight:800; line-height:1.05; letter-spacing:-.02em; }
+.intro-title-highlight { background:linear-gradient(transparent 50%,#fde68a 50%); padding:0 6px; }
+.intro-rule { height:3px; border-radius:2px; background:#2563EB; width:60px; margin:20px auto 18px; }
+.intro-subtitle { font-size:0.9rem; color:#666; font-weight:500; margin-bottom:22px; line-height:1.6; }
+.intro-badge { display:inline-block; background:#fde68a; border:1.5px solid #d4a800; border-radius:20px; padding:4px 14px;
+  font-size:0.72rem; font-weight:700; letter-spacing:.06em; margin-bottom:20px; color:#7c6600; }
+.register-inner { background:#fff; border-radius:16px; padding:40px; border:2.5px solid #444; box-shadow:4px 4px 0 #ccc5b8; max-width:560px; margin:24px auto; }
+.reg-section-title { font-size:0.78rem; font-weight:700; letter-spacing:.06em; color:#2563EB; margin:22px 0 10px; }
+.checklist { list-style:none; }
+.checklist li { display:flex; align-items:flex-start; gap:12px; padding:14px 16px; margin-bottom:8px; border:2px solid #e0dcd4;
+  border-radius:10px; background:#fff; cursor:pointer; transition:all .15s; user-select:none; }
+.checklist li:hover { background:#faf6ef; border-color:#aaa; }
+.checklist li.checked { border-color:#2563EB; background:#eff6ff; }
+.check-box { width:22px; height:22px; border:2px solid #888; border-radius:6px; display:flex; align-items:center; justify-content:center;
+  flex-shrink:0; margin-top:1px; font-size:0.82rem; color:transparent; }
+.checklist li.checked .check-box { background:#2563EB; border-color:#2563EB; color:#fff; }
+.check-text { font-size:0.88rem; line-height:1.5; } .check-text small { display:block; font-size:0.78rem; color:#888; margin-top:2px; }
+.form-error { color:#d00; font-size:0.84rem; margin:10px 0; display:none; text-align:center; }
+
+/* status bar */
+.status-bar { display:flex; justify-content:space-between; align-items:center; padding:11px 0; margin-bottom:16px;
+  font-size:0.82rem; border-bottom:2px solid #555; letter-spacing:.03em; }
+.round-badge { font-weight:700; } .bank { font-family:'IBM Plex Mono',monospace; font-weight:700; }
+
+/* signal */
+.signal-card { border:2px solid #444; border-radius:12px; padding:18px 20px; margin-bottom:14px; background:#fff; box-shadow:3px 3px 0 #ccc5b8; }
+.signal-card.shock { border-color:#d00; background:#fff5f2; }
+.signal-label { font-size:0.68rem; font-weight:700; letter-spacing:.1em; color:#2563EB; margin-bottom:4px; }
+.signal-card.shock .signal-label { color:#d00; }
+.signal-title { font-size:1.05rem; font-weight:800; margin-bottom:6px; }
+.signal-text { font-size:0.9rem; line-height:1.6; color:#444; }
+.mood-caption { font-family:'IBM Plex Mono',monospace; font-size:0.62rem; font-weight:700; letter-spacing:.06em; color:#999; margin-top:14px; text-transform:uppercase; }
+.mood-row { display:flex; gap:8px; margin-top:6px; flex-wrap:wrap; }
+.mood-chip { font-family:'IBM Plex Mono',monospace; font-size:0.72rem; font-weight:700; border:2px solid #d0ccc4; border-radius:8px; padding:5px 10px; background:#faf6ef; color:#666; }
+.mood-chip.hot { border-color:#2563EB; color:#2563EB; background:#eff6ff; }
+.rework-note { font-size:0.76rem; color:#a05a00; margin-top:12px; font-weight:600; }
+
+/* legend */
+.legend { border:2px solid #444; border-radius:12px; background:#fff; box-shadow:3px 3px 0 #ccc5b8; margin-bottom:14px; overflow:hidden; }
+.legend-head { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:12px 16px; cursor:pointer; font-weight:800; font-size:0.92rem; }
+.legend-head .lg-caret { font-family:'IBM Plex Mono',monospace; color:#888; font-size:0.9rem; }
+.legend-body { padding:0 16px 14px; font-size:0.82rem; line-height:1.6; color:#444; }
+.legend-body .lg-row { margin-top:8px; } .legend-body b { color:#1a1a1a; }
+.legend-body .k { font-family:'IBM Plex Mono',monospace; font-weight:700; color:#2563EB; }
+
+/* decks */
+.decks { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:16px; }
+.deck-head { text-align:center; margin-bottom:10px; }
+.deck-q { font-size:1rem; font-weight:800; letter-spacing:.05em; } .deck-sub { font-size:0.72rem; color:#888; }
+.block-card { border:2px solid #555; border-radius:10px; padding:12px 12px 10px; margin-bottom:8px; cursor:pointer; background:#fff;
+  position:relative; transition:.12s; box-shadow:2px 2px 0 #ddd7cb; }
+.block-card:hover { background:#faf6ef; transform:translate(-1px,-1px); box-shadow:3px 3px 0 #ddd7cb; }
+.block-card.selected { background:#2563EB; border-color:#1a1a1a; color:#fff; box-shadow:3px 3px 0 #1a1a1a; }
+.block-card.selected .block-desc { color:#d4e4f7; } .block-card.selected .block-tag { background:#fde68a; color:#7c6600; border-color:#d4a800; }
+.block-card.selected .stat-l { color:#bcd6f5; } .block-card.selected .seg { background:rgba(255,255,255,.25); } .block-card.selected .seg.on { background:#fde68a; }
+.block-name { font-weight:700; font-size:0.84rem; line-height:1.3; margin-bottom:4px; }
+.block-tag { display:inline-block; font-size:0.58rem; font-weight:700; letter-spacing:.07em; border:1.5px solid #bbb; border-radius:20px; padding:1px 8px; color:#777; margin-bottom:6px; }
+.block-desc { font-size:0.74rem; line-height:1.5; color:#666; margin-bottom:7px; }
+.swap-flag { position:absolute; top:-8px; right:-6px; background:#fde68a; border:1.5px solid #d4a800; color:#7c6600; font-size:0.58rem; font-weight:700; border-radius:20px; padding:1px 8px; }
+.meters { margin-top:8px; display:flex; flex-direction:column; gap:4px; }
+.stat { display:flex; align-items:center; gap:8px; }
+.stat-l { font-family:'IBM Plex Mono',monospace; font-size:0.58rem; font-weight:700; letter-spacing:.05em; color:#8a8a8a; width:46px; text-transform:uppercase; }
+.segs { display:flex; gap:2px; } .seg { width:12px; height:6px; border-radius:2px; background:#e5e0d6; } .seg.on { background:#2563EB; }
+
+/* result */
+.result-banner { border:2px solid #444; border-radius:12px; padding:22px; margin-bottom:14px; text-align:center; background:#fff; box-shadow:3px 3px 0 #ccc5b8; }
+.result-banner .big-num { font-size:2.3rem; font-weight:800; margin:6px 0 2px; color:#2563EB; font-family:'IBM Plex Mono',monospace; }
+.result-meta { font-size:0.8rem; color:#666; }
+.line-item { display:flex; justify-content:space-between; gap:14px; padding:9px 0; border-bottom:1px solid #eae5da; font-size:0.85rem; }
+.line-item:last-child { border-bottom:none; }
+.li-name { font-weight:700; } .li-name.combo-plus { color:#1d9d55; } .li-name.combo-minus { color:#d00; }
+.li-why { font-size:0.76rem; color:#777; }
+.li-amount { font-family:'IBM Plex Mono',monospace; font-weight:700; white-space:nowrap; }
+.li-amount.plus { color:#1d9d55; } .li-amount.minus { color:#d00; }
+
+/* triangle */
+.tri-svg text { font-family:'Inter',sans-serif; }
+.tri-corner-label { font-size:11px; font-weight:800; letter-spacing:1px; fill:#2563EB; }
+.tri-pick { font-size:12px; font-weight:700; fill:#1a1a1a; }
+.tri-tag { fill:#a05a00; font-weight:700; letter-spacing:.3px; }
+.tri-who { font-size:10px; fill:#888; font-weight:600; }
+
+/* leaderboard */
+.lb-row { display:flex; align-items:center; gap:14px; padding:12px 14px; border:2px solid #444; border-radius:11px; margin-bottom:9px; background:#fff; box-shadow:2px 2px 0 #ccc5b8; }
+.lb-row.me { border-color:#2563EB; box-shadow:3px 3px 0 #2563EB; }
+.lb-row.win { background:#f2fbf5; border-color:#1d9d55; box-shadow:3px 3px 0 #1d9d55; }
+.lb-rank { font-family:'IBM Plex Mono',monospace; font-weight:800; font-size:1.2rem; width:34px; text-align:center; color:#888; }
+.lb-rank.gold { color:#d4a800; }
+.lb-name { font-weight:700; font-size:0.95rem; flex:1; min-width:0; } .lb-sub { font-size:0.72rem; color:#888; font-weight:500; }
+.lb-bank { font-family:'IBM Plex Mono',monospace; font-weight:800; font-size:1.1rem; }
+.lb-delta { font-family:'IBM Plex Mono',monospace; font-size:0.78rem; font-weight:700; color:#1d9d55; width:64px; text-align:right; }
+
+/* insight cards */
+.insight-cards { display:flex; flex-wrap:wrap; gap:14px; margin-top:16px; }
+.insight-card { flex:1 1 240px; position:relative; background:#fffef9; border:2px solid #222; border-radius:14px; padding:16px 16px 16px 46px;
+  line-height:1.55; font-size:0.84rem; box-shadow:3px 3px 0 #e0e0dc; transform:rotate(var(--rot,0deg)); }
+.insight-num { position:absolute; left:12px; top:14px; width:26px; height:26px; border-radius:50%; background:#2563eb; color:#fff;
+  font-size:0.75rem; font-weight:700; display:flex; align-items:center; justify-content:center; }
+
+/* reflection */
+.ref-group { margin-bottom:18px; } .ref-group label { display:block; font-size:0.88rem; font-weight:600; margin-bottom:6px; }
+.ref-group label small { font-weight:400; color:#888; }
+.ref-slider-row { display:flex; align-items:center; gap:12px; } .ref-slider-row input[type=range] { flex:1; accent-color:#2563EB; }
+.ref-slider-val { font-weight:700; font-size:0.95rem; min-width:28px; text-align:center; color:#2563EB; }
+.ref-slider-labels { display:flex; justify-content:space-between; font-size:0.72rem; color:#888; margin-top:2px; }
+.ref-success { text-align:center; padding:32px 24px; border:2px solid #2ECC71; border-radius:12px; background:#f0fdf4; }
+.ref-success h3 { color:#15803d; background:none; display:block; font-size:1.1rem; margin-bottom:8px; }
+
+@media (max-width:640px){ .decks { grid-template-columns:1fr; } .register-inner { padding:26px 20px; } }
+</style>
+</head>
+<body>
+
+<!-- INTRO -->
+<div id="screen-intro">
+  <div class="container">
+    <div class="intro-inner">
+      <div class="intro-badge">SOLO PRACTICE</div>
+      <div class="intro-the">the</div>
+      <div class="intro-title"><span class="intro-title-highlight">REMIX</span></div>
+      <div class="intro-rule"></div>
+      <div class="intro-subtitle">Business Model Arena · d.MBA<br><br>You run <strong>Grind &amp; Glory</strong>, a specialty coffee company. Over five market rounds you snap together a business model from three blocks, react to what the market rewards, and see how it lands against four rival firms. Same game we played live — at your own pace.</div>
+      <button class="primary" style="padding:16px 52px;font-size:1rem;" onclick="showScreen('screen-register')">Begin</button>
+    </div>
+  </div>
+</div>
+
+<!-- REGISTER -->
+<div id="screen-register" class="hidden">
+  <div class="container">
+    <div class="register-inner">
+      <div class="center"><h1 style="font-size:1.35rem;font-weight:800;display:inline-block;background:linear-gradient(transparent 55%,#fde68a 55%);padding:0 4px;">Before you play</h1></div>
+      <p class="muted center" style="font-size:0.88rem;margin-top:8px;">This is a make-up for the live session. Pop in your details and confirm you've done the prep.</p>
+      <div class="reg-section-title">YOUR NAME</div>
+      <input type="text" id="reg-name" placeholder="Alex Rivera" autocomplete="name">
+      <div class="reg-section-title">YOUR EMAIL</div>
+      <input type="email" id="reg-email" placeholder="you@example.com" autocomplete="email">
+      <div class="reg-section-title">PRE-REQUISITE CHECKLIST</div>
+      <p class="muted" style="font-size:0.82rem;margin-bottom:10px;">To get the most from this game, you should have completed:</p>
+      <ul class="checklist" id="reg-checklist">
+        <li onclick="toggleCheck(this)" data-key="ondemand"><div class="check-box">&#10003;</div>
+          <div class="check-text">I've watched the Business Models on-demand content<small>The patterns and the model triangle you'll apply in-game</small></div></li>
+        <li onclick="toggleCheck(this)" data-key="recording"><div class="check-box">&#10003;</div>
+          <div class="check-text">I've watched the recording of the live practice session<small>Or as much of it as I could</small></div></li>
+      </ul>
+      <div id="reg-error" class="form-error">Enter your name, a valid email, and check both boxes.</div>
+      <button class="primary" style="width:100%;padding:14px;margin-top:16px;" onclick="submitRegistration()">Enter the Arena &rarr;</button>
+    </div>
+  </div>
+</div>
+
+<!-- ROUND (build) -->
+<div id="screen-round" class="hidden"><div class="container" id="round-body"></div></div>
+<!-- RESULT (reveal) -->
+<div id="screen-result" class="hidden"><div class="container" id="result-body"></div></div>
+<!-- FINAL -->
+<div id="screen-final" class="hidden"><div class="container" id="final-body"></div></div>
+
+<!-- REFLECT -->
+<div id="screen-reflect" class="hidden">
+  <div class="container">
+    <div class="register-inner">
+      <div class="center"><h2 style="font-size:1.2rem;font-weight:800;display:inline-block;background:linear-gradient(transparent 55%,#fde68a 55%);padding:0 4px;">Your takeaways</h2></div>
+      <p class="muted center" style="font-size:0.85rem;margin:8px 0 20px;">Capture what you learned — sent to the d.MBA team, with a copy to you.</p>
+      <div class="ref-group"><label>How confident are you now in remixing business-model patterns to fit a market?</label>
+        <div class="ref-slider-row"><input type="range" id="ref-confidence" min="1" max="10" value="5" oninput="document.getElementById('ref-conf-val').textContent=this.value"><span class="ref-slider-val" id="ref-conf-val">5</span></div>
+        <div class="ref-slider-labels"><span>Not at all</span><span>Very confident</span></div></div>
+      <div class="ref-group"><label>What was your biggest takeaway?</label><textarea id="ref-takeaway" placeholder="e.g. the model that wins one market loses the next — fit is everything…"></textarea></div>
+      <div class="ref-group"><label>How will you apply this in your own work? <small>(be specific)</small></label><textarea id="ref-application" placeholder="e.g. before we change our pricing model I'll map the knock-on effects on delivery and product…"></textarea></div>
+      <div class="ref-group"><label>What surprised you across the five rounds?</label><textarea id="ref-surprise" placeholder="e.g. how expensive it was to keep swapping my model…"></textarea></div>
+      <div class="ref-group"><label>Any other reflections or questions? <small>(optional)</small></label><textarea id="ref-other" placeholder="Anything else…"></textarea></div>
+      <div id="ref-error" class="form-error">Please fill in at least the first three questions.</div>
+      <button class="primary" id="ref-submit-btn" style="width:100%;padding:14px;" onclick="submitReflection()">Submit my takeaways &rarr;</button>
+    </div>
+  </div>
+</div>
+
+<!-- SUCCESS -->
+<div id="screen-success" class="hidden">
+  <div class="container"><div class="register-inner center">
+    <div class="ref-success"><h3>Submission received!</h3>
+      <p class="muted" style="font-size:0.9rem;">Your takeaways and results have been sent to the d.MBA team. A copy is on its way to <strong id="ref-confirm-email"></strong>.</p></div>
+    <button class="primary" style="margin-top:22px;padding:14px 34px;" onclick="playAgain()">Play again &rarr;</button>
+  </div></div>
+</div>
+
+<script>
+// ===================== GAME DATA (ported from the multiplayer server) =====================
+const DECKS = [
+  { key:"create", q:"WHAT", sub:"you create", cards:[
+    {id:"craft",name:"Small Batch Craft",tag:"CRAFT",desc:"Every bag roasted in house. Obsessive, slow, exceptional.",reach:1,love:4,margin:2},
+    {id:"community",name:"Community Blends",tag:"OPEN SOURCE",desc:"Members invent and vote on blends, you roast the winners.",reach:2,love:3,margin:2},
+    {id:"whitelabel",name:"White Label Roasting",tag:"WHITE LABEL",desc:"You roast, hotels and brands put their own logo on it.",reach:3,love:1,margin:3},
+    {id:"microlots",name:"200 Micro Lots",tag:"LONG TAIL",desc:"Tiny harvests from 200 farms. Something for every taste.",reach:2,love:3,margin:1},
+  ]},
+  { key:"deliver", q:"HOW", sub:"you deliver it", cards:[
+    {id:"cafe",name:"Flagship Cafe",tag:"OWN CHANNEL",desc:"One beautiful cafe. You control every detail of it.",reach:1,love:4,margin:2},
+    {id:"webshop",name:"Webshop",tag:"E-COMMERCE",desc:"Ship anywhere, unlimited shelf space, no landlords.",reach:3,love:2,margin:3},
+    {id:"franchise",name:"Franchise Network",tag:"FRANCHISE",desc:"Partners open cafes with your playbook, and pay for it.",reach:4,love:2,margin:3},
+    {id:"grocery",name:"Grocery Shelves",tag:"WHOLESALE",desc:"Chains stock you nationwide. They own the shopper.",reach:4,love:1,margin:1},
+  ]},
+  { key:"capture", q:"WHY", sub:"money comes in", cards:[
+    {id:"perbag",name:"Pay Per Bag",tag:"ONE OFF SALES",desc:"Sell a bag, earn on a bag. Simple, no strings attached.",reach:2,love:2,margin:2},
+    {id:"subscription",name:"Bean Subscription",tag:"RECURRING REVENUE",desc:"Fresh beans monthly. Predictable cash, churn is the enemy.",reach:2,love:3,margin:3},
+    {id:"podlock",name:"Cheap Machine, Pricey Pods",tag:"RAZOR AND BLADES",desc:"Nearly free brewer, then profit on refills forever.",reach:3,love:2,margin:4},
+    {id:"club",name:"Free Tastings, Paid Club",tag:"FREEMIUM",desc:"Weekly free tastings. Superfans pay for the club.",reach:3,love:3,margin:1},
+  ]},
+];
+const CARD_BY_ID = {}; DECKS.forEach(d=>d.cards.forEach(c=>CARD_BY_ID[c.id]=c));
+const COMBOS = [
+  {cards:["webshop","subscription"],name:"THE DTC FLYWHEEL",delta:20,why:"You own the customer relationship. Retention compounds."},
+  {cards:["podlock","grocery"],name:"THE NESPRESSO PLAY",delta:28,why:"Machines on every shelf, refills forever after."},
+  {cards:["microlots","webshop"],name:"TRUE LONG TAIL",delta:16,why:"Infinite shelf space makes 200 tiny lots viable."},
+  {cards:["community","subscription"],name:"COMMUNITY LOCK IN",delta:14,why:"People stay for blends they helped create."},
+  {cards:["community","club"],name:"SUPERFAN ENGINE",delta:16,why:"The crowd that makes the coffee happily pays to belong."},
+  {cards:["craft","cafe"],name:"DESTINATION BREW",delta:20,why:"Craft plus experience. People cross town for this."},
+  {cards:["craft","franchise"],name:"CRAFT DOES NOT COPY",delta:-24,why:"Obsessive quality dies in a playbook. The brand dilutes."},
+  {cards:["whitelabel","cafe"],name:"CHANNEL CONFLICT",delta:-16,why:"Your cafe now competes with the brands you supply."},
+  {cards:["microlots","grocery"],name:"SHELF WARS",delta:-20,why:"Retailers stock 3 bestsellers, not 200 experiments."},
+  {cards:["subscription","grocery"],name:"WHOSE CUSTOMER IS IT?",delta:-20,why:"Retail will not hand you their shoppers."},
+  {cards:["club","franchise"],name:"FREE DOES NOT FRANCHISE",delta:-16,why:"Franchisees revolt at giving product away."},
+  {cards:["craft","grocery"],name:"PREMIUM IN AISLE 5",delta:-14,why:"Supermarket shelves flatten a premium story."},
+];
+const ROUNDS = [
+  {title:"OPENING BREW",shock:false,signal:"It's the early 2010s and specialty coffee has boiled over from a niche into a movement — small-batch, single-origin beans, roasted with care and sold with a story. A generation raised on chain lattes now wants craft, provenance and something to believe in, and they'll pay a premium for it. You're a brand-new roaster stepping into that wave. No tailwind or headwind yet — just a wide-open, curious market. Build your first business model and see how it lands.",weights:{reach:1.0,love:1.0,margin:1.0},mods:[]},
+  {title:"SUBSCRIPTION WARS",shock:true,signal:"A venture backed rival launches coffee for €9 a month with a free machine. Customers with no reason to stay start drifting — and your own subscribers are tempted too.",weights:{reach:0.9,love:1.3,margin:1.0},mods:[{card:"perbag",delta:-16,why:"One off buyers get poached first. Nothing holds them."},{card:"subscription",delta:-20,why:"The €9 rival undercuts you — your subscribers churn to cheaper beans."}]},
+  {title:"RECESSION BITES",shock:true,signal:"Consumers cut spending hard. Cheap thrills survive, mediocre premium dies, and efficiency suddenly matters.",weights:{reach:0.8,love:0.8,margin:1.5},mods:[{card:"club",delta:-14,why:"Free tasting crowds swell, paid conversions dry up."},{card:"cafe",delta:-6,why:"Downtown footfall drops with office spending."}]},
+  {title:"HOME BREW GOES VIRAL",shock:false,signal:"A TikTok trend turns home brewing into a national obsession. Everyone wants gear and great beans delivered.",weights:{reach:1.3,love:1.1,margin:0.8},mods:[{card:"webshop",delta:8,why:"Delivery demand explodes."},{card:"podlock",delta:8,why:"Everyone suddenly wants a machine."},{card:"cafe",delta:-4,why:"Why go out? The kitchen is the new cafe."}]},
+  {title:"THE RETAIL ULTIMATUM",shock:true,signal:"Final round. A national chain will stock you in 400 stores — huge reach, but on their terms, and they take half your margin. The market has tilted hard to the shelf. This is your last move: chase the scale play, or hold your ground. Whatever you lock in now is your final model.",weights:{reach:1.4,love:0.9,margin:1.1},mods:[{card:"grocery",delta:20,why:"The offer is real. Reach explodes overnight."},{card:"webshop",delta:-12,why:"Shoppers drift to the shelf; direct online demand cools."},{card:"subscription",delta:-10,why:"In a shelf-first market, direct subscriptions stall."}]},
+];
+const BASE_MULT = 8, REWORK_COST = 18, TOTAL_ROUNDS = ROUNDS.length;
+const COMPANY = { name:"Grind & Glory", emoji:"☕", who:"specialty coffee lovers" };
+const DEBRIEF = [
+  "About 90% of successful business models are remixes of known patterns. You just played with 12 of them.",
+  "Changing one corner of the triangle cascades through the others. That rework drag you felt is real — it's called an operating model.",
+  "No block is good or bad. Grocery shelves won round 5 and lost round 2. Fit between model and market is the whole game.",
+];
+// Rival firms (hold a fixed model all five rounds — never swap, so no rework).
+const BOTS = [
+  {name:"Bean Counter Co", model:{create:"community",deliver:"webshop",capture:"subscription"}},
+  {name:"Corner Cafe Collective", model:{create:"craft",deliver:"cafe",capture:"club"}},
+  {name:"Pod Empire", model:{create:"whitelabel",deliver:"grocery",capture:"podlock"}},
+  {name:"Aisle Five Roasters", model:{create:"microlots",deliver:"grocery",capture:"perbag"}},
+];
+
+// ===================== EmailJS (shared d.MBA templates; distinguished by game_name) =====================
+const EMAILJS_PUBLIC_KEY='C16RP8PBnTudO3pTa';
+const EMAILJS_SERVICE_ID='service_vgc4x29';
+const EMAILJS_ADMIN_TEMPLATE='template_04i67k6';
+const EMAILJS_CONFIRM_TEMPLATE='template_fwackuq';
+const ADMIN_EMAIL='admin@d.mba';
+const GAME_NAME='Business Models — The Remix';
+
+// ===================== STATE =====================
+let player = { name:"", email:"", round:0, picks:{create:null,deliver:null,capture:null}, prevPicks:null, bank:0, history:[] };
+let bots = [];
+let checklistState = { ondemand:false, recording:false };
+let legendOpen = true;
+
+// ===================== HELPERS =====================
+function esc(s){ return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+let _currentScreen=null;
+function showScreen(id){ document.querySelectorAll('body > div[id^="screen-"]').forEach(s=>s.classList.add('hidden')); document.getElementById(id).classList.remove('hidden'); if(id!==_currentScreen){ window.scrollTo(0,0); _currentScreen=id; } }
+function cardTag(id){ return CARD_BY_ID[id]?CARD_BY_ID[id].tag:''; }
+function cardName(id){ return CARD_BY_ID[id]?CARD_BY_ID[id].name:'—'; }
+function segsHTML(v){ return '<span class="segs">'+[1,2,3,4,5].map(i=>`<span class="seg ${i<=v?'on':''}"></span>`).join('')+'</span>'; }
+
+// ===================== REGISTER =====================
+function toggleCheck(li){ const k=li.dataset.key; checklistState[k]=!checklistState[k]; li.classList.toggle('checked',checklistState[k]); }
+function submitRegistration(){
+  const name=document.getElementById('reg-name').value.trim();
+  const email=document.getElementById('reg-email').value.trim();
+  const validEmail=/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const err=document.getElementById('reg-error');
+  if(!name || !validEmail || !(checklistState.ondemand&&checklistState.recording)){ err.style.display='block'; return; }
+  err.style.display='none';
+  player.name=name; player.email=email;
+  startGame();
+}
+
+// ===================== SCORING (pure port of the server's compute_round) =====================
+function computeRound(picks, roundIdx, prevPicks){
+  const r=ROUNDS[roundIdx]; const ids=[picks.create,picks.deliver,picks.capture];
+  if(!ids.every(x=>x)) return { revenue:0, items:[], complete:false };
+  const cards=ids.map(i=>CARD_BY_ID[i]);
+  const R=cards.reduce((s,c)=>s+c.reach,0), L=cards.reduce((s,c)=>s+c.love,0), M=cards.reduce((s,c)=>s+c.margin,0);
+  const w=r.weights, items=[];
+  const base=Math.round((R*w.reach + L*w.love + M*w.margin)*BASE_MULT);
+  items.push({name:"MARKET BASE",kind:"base",cls:"",delta:base,why:`Reach ${R} ×${w.reach.toFixed(1)} + Love ${L} ×${w.love.toFixed(1)} + Margin ${M} ×${w.margin.toFixed(1)}, times €${BASE_MULT}k`});
+  const picked=new Set(ids);
+  COMBOS.forEach(cb=>{ if(cb.cards.every(id=>picked.has(id))){ const pos=cb.delta>0; items.push({name:(pos?"✓ ":"✗ ")+cb.name,kind:"combo",cls:pos?"combo-plus":"combo-minus",delta:cb.delta,why:cb.why}); }});
+  r.mods.forEach(m=>{ if(picked.has(m.card)){ const pos=m.delta>0; items.push({name:(pos?"✓ ":"✗ ")+"EVENT: "+CARD_BY_ID[m.card].name.toUpperCase(),kind:"event",cls:pos?"combo-plus":"combo-minus",delta:m.delta,why:m.why}); }});
+  if(prevPicks){ const swaps=["create","deliver","capture"].filter(k=>picks[k]!==prevPicks[k]).length;
+    if(swaps>0) items.push({name:"✗ REWORK DRAG",kind:"rework",cls:"combo-minus",delta:-REWORK_COST*swaps,why:`${swaps} block${swaps>1?"s":""} swapped. New ops, retrained staff, confused customers.`}); }
+  const revenue=Math.max(0, items.reduce((s,i)=>s+i.delta,0));
+  return { revenue, items, complete:true };
+}
+
+// ===================== GAME FLOW =====================
+function startGame(){
+  player.round=0; player.picks={create:null,deliver:null,capture:null}; player.prevPicks=null; player.bank=0; player.history=[];
+  bots = BOTS.map(b=>({ name:b.name, model:b.model, bank:0, last:null, history:[] }));
+  renderRound();
+}
+function toggleLegend(){ legendOpen=!legendOpen; renderRound(); }
+function pickBlock(deck,card){
+  player.picks[deck]=card;
+  // Update this deck's cards in place (no full re-render — preserves scroll position).
+  document.querySelectorAll('.block-card[data-deck="'+deck+'"]').forEach(el=>{
+    const isSel = el.dataset.card===card;
+    el.classList.toggle('selected', isSel);
+    const swapped = player.prevPicks && isSel && player.prevPicks[deck]!==card;
+    let flag = el.querySelector('.swap-flag');
+    if(swapped && !flag){ flag=document.createElement('span'); flag.className='swap-flag'; flag.textContent='REWORK −€'+REWORK_COST+'k'; el.appendChild(flag); }
+    else if(!swapped && flag){ flag.remove(); }
+  });
+  const complete = player.picks.create && player.picks.deliver && player.picks.capture;
+  const btn=document.getElementById('lock-btn'); if(btn) btn.disabled=!complete;
+  const hint=document.getElementById('lock-hint'); if(hint) hint.style.display=complete?'none':'block';
+}
+
+function renderRound(){
+  const s=ROUNDS[player.round], w=s.weights, maxW=Math.max(w.reach,w.love,w.margin);
+  const moods=[["REACH",w.reach],["LOVE",w.love],["MARGIN",w.margin]].map(([n,v])=>`<span class="mood-chip ${v===maxW?'hot':''}">${n} ×${v.toFixed(1)}</span>`).join("");
+  const complete = player.picks.create && player.picks.deliver && player.picks.capture;
+  const decks = DECKS.map(deck=>`<div><div class="deck-head"><div class="deck-q">${deck.q}</div><div class="deck-sub">${deck.sub}</div></div>
+    ${deck.cards.map(c=>{ const sel=player.picks[deck.key]===c.id; const swapped=player.prevPicks&&sel&&player.prevPicks[deck.key]!==c.id;
+      return `<div class="block-card ${sel?'selected':''}" data-deck="${deck.key}" data-card="${c.id}" onclick="pickBlock('${deck.key}','${c.id}')">
+        ${swapped?'<span class="swap-flag">REWORK −€'+REWORK_COST+'k</span>':''}
+        <div class="block-name">${esc(c.name)}</div><div><span class="block-tag">${esc(c.tag)}</span></div>
+        <div class="block-desc">${esc(c.desc)}</div>
+        <div class="meters"><div class="stat"><span class="stat-l">Reach</span>${segsHTML(c.reach)}</div><div class="stat"><span class="stat-l">Love</span>${segsHTML(c.love)}</div><div class="stat"><span class="stat-l">Margin</span>${segsHTML(c.margin)}</div></div>
+      </div>`;}).join("")}</div>`).join("");
+  document.getElementById('round-body').innerHTML = `
+    <div class="status-bar"><span class="round-badge">ROUND ${player.round+1} / ${TOTAL_ROUNDS}</span>
+      <span>${esc(player.name)} · ${COMPANY.name} ${COMPANY.emoji}</span><span class="bank">BANK €${player.bank}k</span></div>
+    <div class="signal-card ${s.shock?'shock':''}"><div class="signal-label">MARKET SIGNAL</div>
+      <div class="signal-title">${esc(s.title)}</div><div class="signal-text">${esc(s.signal)}</div>
+      <div class="mood-caption">What the market rewards this round →</div><div class="mood-row">${moods}</div>
+      ${player.round>0?'<div class="rework-note">⚠ Keeping your model is free. Every swapped block costs €'+REWORK_COST+'k rework this round.</div>':''}</div>
+    <div class="legend"><div class="legend-head" onclick="toggleLegend()">📖 How to read your board <span class="lg-caret">${legendOpen?'▾ hide':'▸ show'}</span></div>
+      ${legendOpen?`<div class="legend-body">
+        <div class="lg-row"><b>Your model is three blocks.</b> Pick one from each column — <span class="k">WHAT</span> you make, <span class="k">HOW</span> you deliver it, <span class="k">WHY</span> money comes in. Together they're your business model.</div>
+        <div class="lg-row"><b>Every block is a real pattern.</b> The tag on it (<span class="k">RAZOR &amp; BLADES</span>, <span class="k">FRANCHISE</span>, <span class="k">FREEMIUM</span>…) names a known business model — you're remixing proven patterns.</div>
+        <div class="lg-row"><b>The three meters rate each block</b> (out of 5): <b>Reach</b> how many people it reaches · <b>Love</b> how much they adore it · <b>Margin</b> profit per sale. No block is strong at everything.</div>
+        <div class="lg-row"><b>The market mood</b> (chips above) shows what <i>this</i> round rewards most. Match your blocks to it. Some pairs of blocks click into a bonus (or clash) — those combos are hidden, so read the signal and bet.</div>
+      </div>`:''}</div>
+    <div class="decks">${decks}</div>
+    <div class="center" style="margin-top:8px;">
+      <button class="primary" id="lock-btn" ${complete?'':'disabled'} onclick="lockRound()">LOCK IN &amp; SEE RESULTS →</button>
+      <div class="muted" id="lock-hint" style="font-size:0.8rem;margin-top:6px;${complete?'display:none;':''}">Fill all three corners.</div></div>`;
+  showScreen('screen-round');
+}
+
+function lockRound(){
+  const res=computeRound(player.picks, player.round, player.prevPicks);
+  player.bank+=res.revenue; player.last=res;
+  player.history.push({round:player.round, revenue:res.revenue, picks:{...player.picks}});
+  bots.forEach(b=>{ const r=computeRound(b.model, player.round, b.model); b.bank+=r.revenue; b.last=r; b.history.push({round:player.round,revenue:r.revenue}); });
+  renderResult();
+}
+
+function triangleHTML(picks){
+  const nm=k=>cardName(picks[k]), tg=k=>cardTag(picks[k]);
+  const w=460,h=300, top=[w/2,54], bl=[80,h-70], br=[w-80,h-70];
+  const corner=(x,y,label,key,above)=>{ const ly=above?y-34:y+20, ny=above?y-21:y+34, ty=above?y-9:y+46;
+    return `<text x="${x}" y="${ly}" text-anchor="middle" class="tri-corner-label">${label}</text>
+      <text x="${x}" y="${ny}" text-anchor="middle" class="tri-pick">${esc(nm(key))}</text>
+      <text x="${x}" y="${ty}" text-anchor="middle" class="tri-tag" style="font-size:10px;">${esc(tg(key))}</text>`; };
+  return `<svg class="tri-svg" viewBox="0 0 ${w} ${h}" style="max-width:${w}px;width:100%;">
+    <polygon points="${top} ${bl} ${br}" fill="#faf6ef" stroke="#444" stroke-width="2.5" stroke-linejoin="round"/>
+    ${corner(top[0],top[1],'WHAT','create',true)}
+    ${corner(bl[0],bl[1],'HOW','deliver',false)}
+    ${corner(br[0],br[1],'WHY','capture',false)}
+    <text x="${w/2}" y="${h/2+12}" text-anchor="middle" class="tri-who">WHO: ${esc(COMPANY.who)}</text></svg>`;
+}
+function leaderboardHTML(showDelta){
+  const rows=[{name:player.name+" (you)",bank:player.bank,delta:player.last?player.last.revenue:0,me:true},
+    ...bots.map(b=>({name:b.name,bank:b.bank,delta:b.last?b.last.revenue:0}))].sort((a,b)=>b.bank-a.bank);
+  rows.forEach((r,i)=>r.rank=i+1);
+  return `<div class="card"><h3>THE ARENA — CUMULATIVE BANK</h3>${rows.map(r=>`
+    <div class="lb-row ${r.me?'me':''} ${r.rank===1?'win':''}"><div class="lb-rank ${r.rank===1?'gold':''}">${r.rank}</div>
+      <div class="lb-name">${esc(r.name)}${r.me?'':' <span class="lb-sub">rival firm</span>'}</div>
+      ${showDelta?`<div class="lb-delta">+€${r.delta}k</div>`:''}<div class="lb-bank">€${r.bank}k</div></div>`).join('')}</div>`;
+}
+function renderResult(){
+  const s=ROUNDS[player.round], lr=player.last, last=player.round===TOTAL_ROUNDS-1;
+  const lines=lr.items.map(i=>`<div class="line-item"><div><span class="li-name ${i.cls}">${esc(i.name)}</span><br><span class="li-why">${esc(i.why)}</span></div>
+    <div class="li-amount ${i.delta>=0?(i.kind==='base'?'':'plus'):'minus'}">${i.delta>=0?'+':'−'}€${Math.abs(i.delta)}k</div></div>`).join('');
+  document.getElementById('result-body').innerHTML=`
+    <div class="status-bar"><span class="round-badge">ROUND ${player.round+1} / ${TOTAL_ROUNDS} · RESULTS</span>
+      <span>${esc(player.name)} · ${COMPANY.name} ${COMPANY.emoji}</span><span class="bank">BANK €${player.bank}k</span></div>
+    <div class="result-banner"><div class="result-meta">${esc(s.title)}</div><div class="big-num">€${lr.revenue}k</div><div class="result-meta">revenue this round</div></div>
+    <div class="card"><h3>HOW THE MONEY HAPPENED</h3>${lines}</div>
+    <div class="card"><h3>YOUR MODEL, THE TRIANGLE</h3><div style="display:flex;justify-content:center;">${triangleHTML(player.picks)}</div></div>
+    ${leaderboardHTML(true)}
+    <div class="center" style="margin-top:8px;"><button class="primary" onclick="nextRound()">${last?'SEE FINAL RESULTS →':'NEXT ROUND →'}</button></div>`;
+  showScreen('screen-result');
+}
+function nextRound(){
+  if(player.round===TOTAL_ROUNDS-1){ renderFinal(); return; }
+  player.prevPicks={...player.picks}; player.round+=1;
+  renderRound();
+}
+
+function renderFinal(){
+  const rows=[{name:player.name+" (you)",bank:player.bank,me:true},...bots.map(b=>({name:b.name,bank:b.bank}))].sort((a,b)=>b.bank-a.bank);
+  rows.forEach((r,i)=>r.rank=i+1);
+  const myRank=rows.find(r=>r.me).rank;
+  document.getElementById('final-body').innerHTML=`
+    <div class="center" style="margin-top:14px;"><div class="intro-badge">☕ LAST POUR</div>
+      <div class="intro-title" style="font-size:2rem;">${myRank===1?'🏆 You win the arena':'The market has spoken'}</div>
+      <p class="muted" style="margin:8px 0 4px;">You banked <strong>€${player.bank}k</strong> over five rounds — <strong>rank ${myRank} of ${rows.length}</strong>.</p></div>
+    <div class="card"><h3>FINAL STANDINGS</h3>${rows.map(r=>`
+      <div class="lb-row ${r.me?'me':''} ${r.rank===1?'win':''}"><div class="lb-rank ${r.rank===1?'gold':''}">${r.rank}</div>
+        <div class="lb-name">${esc(r.name)}</div><div class="lb-bank">€${r.bank}k</div></div>`).join('')}</div>
+    <div class="card"><h3>YOUR REVENUE, ROUND BY ROUND</h3>${player.history.map(h=>`<div class="line-item"><span class="li-name">Round ${h.round+1} · ${['create','deliver','capture'].map(k=>cardName(h.picks[k])).join(' + ')}</span><span class="li-amount">€${h.revenue}k</span></div>`).join('')}</div>
+    <div class="card"><h3>WHAT JUST HAPPENED</h3><div class="insight-cards">${DEBRIEF.map((t,i)=>`<div class="insight-card" style="--rot:${[-0.8,0.6,-0.4][i]||0}deg"><div class="insight-num">${i+1}</div><p>${esc(t)}</p></div>`).join('')}</div></div>
+    <div class="center" style="margin-top:8px;"><button class="primary" onclick="showScreen('screen-reflect')">Reflect &amp; finish →</button></div>`;
+  showScreen('screen-final');
+}
+
+// ===================== REFLECTION + EMAIL =====================
+function buildReflectionPayload(){
+  const rows=[{name:player.name,bank:player.bank},...bots.map(b=>({name:b.name,bank:b.bank}))].sort((a,b)=>b.bank-a.bank);
+  const myRank=rows.findIndex(r=>r.name===player.name)+1;
+  const finalModel=['create','deliver','capture'].map(k=>cardName(player.picks[k])).join(' + ');
+  const summary=[
+    `Final score: €${player.bank}k banked over 5 rounds (rank ${myRank} of ${rows.length}).`,
+    `Final model: ${finalModel}.`,
+    `Round by round: ${player.history.map(h=>'R'+(h.round+1)+' €'+h.revenue+'k').join(' · ')}.`,
+  ].join('\n');
+  return {
+    student_name: player.name,
+    student_email: player.email,
+    game_name: GAME_NAME,
+    game_summary: summary,
+    confidence: document.getElementById('ref-confidence').value + '/10',
+    takeaway: document.getElementById('ref-takeaway').value.trim(),
+    application: document.getElementById('ref-application').value.trim(),
+    surprise: document.getElementById('ref-surprise').value.trim(),
+    other: document.getElementById('ref-other').value.trim() || '(none)',
+    // Remix-specific escape hatches for per-game templating if ever wanted:
+    final_score: '€'+player.bank+'k',
+    rank: '#'+myRank+' of '+rows.length,
+    final_model: finalModel,
+  };
+}
+function submitReflection(){
+  const takeaway=document.getElementById('ref-takeaway').value.trim();
+  const application=document.getElementById('ref-application').value.trim();
+  const surprise=document.getElementById('ref-surprise').value.trim();
+  const err=document.getElementById('ref-error');
+  if(!takeaway||!application||!surprise){ err.style.display='block'; return; }
+  err.style.display='none';
+  const payload=buildReflectionPayload();
+  const btn=document.getElementById('ref-submit-btn'); btn.disabled=true; btn.textContent='Sending…';
+  emailjs.init(EMAILJS_PUBLIC_KEY);
+  Promise.all([
+    emailjs.send(EMAILJS_SERVICE_ID,EMAILJS_ADMIN_TEMPLATE,{...payload,to_email:ADMIN_EMAIL}),
+    emailjs.send(EMAILJS_SERVICE_ID,EMAILJS_CONFIRM_TEMPLATE,{...payload,to_email:player.email}),
+  ]).then(showSuccess).catch(err2=>{ console.error('Email send failed:',err2); showSuccess(); });
+}
+function showSuccess(){ document.getElementById('ref-confirm-email').textContent=player.email; showScreen('screen-success'); }
+function playAgain(){ startGame(); }
+</script>
+</body>
+</html>
