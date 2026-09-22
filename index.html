@@ -124,6 +124,20 @@ textarea { width:100%; padding:12px 14px; border:2px solid #d0ccc4; border-radiu
 .lb-name { font-weight:700; font-size:0.95rem; flex:1; min-width:0; } .lb-sub { font-size:0.72rem; color:#888; font-weight:500; }
 .lb-bank { font-family:'IBM Plex Mono',monospace; font-weight:800; font-size:1.1rem; }
 .lb-delta { font-family:'IBM Plex Mono',monospace; font-size:0.78rem; font-weight:700; color:#1d9d55; width:64px; text-align:right; }
+/* rival scouting (click a rival to see their model) */
+.lb-entry { margin-bottom:9px; }
+.lb-entry .lb-row { margin-bottom:0; cursor:pointer; }
+.lb-hint { font-size:0.74rem; margin-bottom:12px; }
+.lb-caret { font-family:'IBM Plex Mono',monospace; color:#888; font-size:0.9rem; margin-left:8px; flex-shrink:0; }
+.scout-row { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:11px 14px; border:2px solid #444; border-radius:11px; background:#fff; box-shadow:2px 2px 0 #ccc5b8; cursor:pointer; }
+.scout-row:hover { background:#faf6ef; }
+.rival-detail { display:none; }
+.rival-detail.open { display:block; margin:5px 0 0 12px; padding:9px 15px; border-left:3px solid #2563EB; background:#fbf8f2; border-radius:0 8px 8px 0; }
+.rival-line { display:flex; align-items:baseline; gap:10px; padding:5px 0; border-bottom:1px dashed #e5e0d6; }
+.rival-line:last-child { border-bottom:none; }
+.rival-q { font-family:'IBM Plex Mono',monospace; font-size:0.6rem; font-weight:700; letter-spacing:.08em; color:#2563EB; width:42px; flex-shrink:0; }
+.rival-card { font-weight:700; font-size:0.82rem; }
+.rival-tag { font-family:'IBM Plex Mono',monospace; font-size:0.58rem; font-weight:700; letter-spacing:.05em; color:#a05a00; margin-left:auto; white-space:nowrap; }
 
 /* insight cards */
 .insight-cards { display:flex; flex-wrap:wrap; gap:14px; margin-top:16px; }
@@ -291,6 +305,7 @@ let player = { name:"", email:"", round:0, picks:{create:null,deliver:null,captu
 let bots = [];
 let checklistState = { ondemand:false, recording:false };
 let legendOpen = true;
+let expandedRivals = new Set(); // keys "<ctx>-<botIdx>" of open rival model panels
 
 // ===================== HELPERS =====================
 function esc(s){ return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
@@ -380,6 +395,7 @@ function renderRound(){
         <div class="lg-row"><b>The three meters rate each block</b> (out of 5): <b>Reach</b> how many people it reaches · <b>Love</b> how much they adore it · <b>Margin</b> profit per sale. No block is strong at everything.</div>
         <div class="lg-row"><b>The market mood</b> (chips above) shows what <i>this</i> round rewards most. Match your blocks to it. Some pairs of blocks click into a bonus (or clash) — those combos are hidden, so read the signal and bet.</div>
       </div>`:''}</div>
+    ${player.round>0?rivalScoutHTML():''}
     <div class="decks">${decks}</div>
     <div class="center" style="margin-top:8px;">
       <button class="primary" id="lock-btn" ${complete?'':'disabled'} onclick="lockRound()">LOCK IN &amp; SEE RESULTS →</button>
@@ -409,14 +425,49 @@ function triangleHTML(picks){
     ${corner(br[0],br[1],'WHY','capture',false)}
     <text x="${w/2}" y="${h/2+12}" text-anchor="middle" class="tri-who">WHO: ${esc(COMPANY.who)}</text></svg>`;
 }
-function leaderboardHTML(showDelta){
+// One rival's model, three blocks with pattern tags — the scouting payoff.
+function rivalDetailHTML(model){
+  return DECKS.map(d=>{ const c=CARD_BY_ID[model[d.key]];
+    return `<div class="rival-line"><span class="rival-q">${d.q}</span><span class="rival-card">${esc(c.name)}</span><span class="rival-tag">${esc(c.tag)}</span></div>`;
+  }).join('');
+}
+function toggleRival(ctx, idx){
+  const key=ctx+'-'+idx, el=document.getElementById('rival-'+key), caret=document.getElementById('caret-'+key);
+  if(!el) return;
+  const open=!el.classList.contains('open');
+  el.classList.toggle('open', open);
+  if(caret) caret.textContent = open?'▾':'▸';
+  if(open) expandedRivals.add(key); else expandedRivals.delete(key);
+}
+// Build-screen intel panel: what each rival is running, ranked by bank. Tap to expand.
+function rivalScoutHTML(){
+  const ranked=bots.map((b,i)=>({b,i})).sort((x,y)=>y.b.bank-x.b.bank);
+  return `<div class="card"><h3>🔍 SCOUT YOUR RIVALS</h3>
+    <div class="lb-hint muted">Tap a rival to see the three blocks they're running — read the field before you commit your next move.</div>
+    ${ranked.map(({b,i})=>{ const key='build-'+i, open=expandedRivals.has(key);
+      return `<div class="lb-entry">
+        <div class="scout-row" onclick="toggleRival('build',${i})">
+          <div class="lb-name">${esc(b.name)} <span class="lb-sub">€${b.bank}k banked</span></div>
+          <span class="lb-caret" id="caret-${key}">${open?'▾':'▸'}</span></div>
+        <div class="rival-detail ${open?'open':''}" id="rival-${key}">${rivalDetailHTML(b.model)}</div>
+      </div>`; }).join('')}</div>`;
+}
+function leaderboardHTML(showDelta, ctx){
+  ctx=ctx||'reveal';
   const rows=[{name:player.name+" (you)",bank:player.bank,delta:player.last?player.last.revenue:0,me:true},
-    ...bots.map(b=>({name:b.name,bank:b.bank,delta:b.last?b.last.revenue:0}))].sort((a,b)=>b.bank-a.bank);
+    ...bots.map((b,i)=>({name:b.name,bank:b.bank,delta:b.last?b.last.revenue:0,model:b.model,botIdx:i}))].sort((a,b)=>b.bank-a.bank);
   rows.forEach((r,i)=>r.rank=i+1);
-  return `<div class="card"><h3>THE ARENA — CUMULATIVE BANK</h3>${rows.map(r=>`
-    <div class="lb-row ${r.me?'me':''} ${r.rank===1?'win':''}"><div class="lb-rank ${r.rank===1?'gold':''}">${r.rank}</div>
-      <div class="lb-name">${esc(r.name)}${r.me?'':' <span class="lb-sub">rival firm</span>'}</div>
-      ${showDelta?`<div class="lb-delta">+€${r.delta}k</div>`:''}<div class="lb-bank">€${r.bank}k</div></div>`).join('')}</div>`;
+  return `<div class="card"><h3>THE ARENA — CUMULATIVE BANK</h3>
+    <div class="lb-hint muted">Tap a rival firm to see the model behind their number.</div>
+    ${rows.map(r=>{ const clickable=!r.me, key=ctx+'-'+r.botIdx, open=clickable&&expandedRivals.has(key);
+    return `<div class="lb-entry">
+      <div class="lb-row ${r.me?'me':''} ${r.rank===1?'win':''}" ${clickable?`onclick="toggleRival('${ctx}',${r.botIdx})"`:''}>
+        <div class="lb-rank ${r.rank===1?'gold':''}">${r.rank}</div>
+        <div class="lb-name">${esc(r.name)}${r.me?'':' <span class="lb-sub">rival firm</span>'}</div>
+        ${showDelta?`<div class="lb-delta">+€${r.delta}k</div>`:''}<div class="lb-bank">€${r.bank}k</div>
+        ${clickable?`<span class="lb-caret" id="caret-${key}">${open?'▾':'▸'}</span>`:''}</div>
+      ${clickable?`<div class="rival-detail ${open?'open':''}" id="rival-${key}">${rivalDetailHTML(r.model)}</div>`:''}
+    </div>`; }).join('')}</div>`;
 }
 function renderResult(){
   const s=ROUNDS[player.round], lr=player.last, last=player.round===TOTAL_ROUNDS-1;
@@ -428,7 +479,7 @@ function renderResult(){
     <div class="result-banner"><div class="result-meta">${esc(s.title)}</div><div class="big-num">€${lr.revenue}k</div><div class="result-meta">revenue this round</div></div>
     <div class="card"><h3>HOW THE MONEY HAPPENED</h3>${lines}</div>
     <div class="card"><h3>YOUR MODEL, THE TRIANGLE</h3><div style="display:flex;justify-content:center;">${triangleHTML(player.picks)}</div></div>
-    ${leaderboardHTML(true)}
+    ${leaderboardHTML(true,'reveal')}
     <div class="center" style="margin-top:8px;"><button class="primary" onclick="nextRound()">${last?'SEE FINAL RESULTS →':'NEXT ROUND →'}</button></div>`;
   showScreen('screen-result');
 }
