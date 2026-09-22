@@ -297,7 +297,10 @@ const EMAILJS_PUBLIC_KEY='C16RP8PBnTudO3pTa';
 const EMAILJS_SERVICE_ID='service_vgc4x29';
 const EMAILJS_ADMIN_TEMPLATE='template_04i67k6';
 const EMAILJS_CONFIRM_TEMPLATE='template_fwackuq';
-const ADMIN_EMAIL='admin@d.mba';
+// The full submission (score, model, all reflection answers) goes here. Mersi
+// processes these. Sending to a different mailbox than EmailJS's own Gmail sender
+// also avoids the self-send Inbox-suppression that hides mail addressed to itself.
+const ADMIN_EMAIL='mersi@d.mba';
 const GAME_NAME='Business Models — The Remix';
 
 // ===================== STATE =====================
