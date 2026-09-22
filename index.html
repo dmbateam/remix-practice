@@ -297,10 +297,13 @@ const EMAILJS_PUBLIC_KEY='C16RP8PBnTudO3pTa';
 const EMAILJS_SERVICE_ID='service_vgc4x29';
 const EMAILJS_ADMIN_TEMPLATE='template_04i67k6';
 const EMAILJS_CONFIRM_TEMPLATE='template_fwackuq';
-// The full submission (score, model, all reflection answers) goes here. Mersi
-// processes these. Sending to a different mailbox than EmailJS's own Gmail sender
-// also avoids the self-send Inbox-suppression that hides mail addressed to itself.
-const ADMIN_EMAIL='mersi@d.mba';
+// The full submission (score, model, all reflection answers) goes to the d.MBA
+// team. Both inboxes receive it; mersi@d.mba is the human who processes them and,
+// being a different mailbox than EmailJS's own Gmail sender, is not subject to the
+// self-send Inbox-suppression that can hide mail addressed to the sending account.
+// NOTE: the actual recipient(s) are ultimately set by the EmailJS template's
+// "To Email" field — this value is used only if that field is {{to_email}}.
+const ADMIN_EMAIL='admin@d.mba,mersi@d.mba';
 const GAME_NAME='Business Models — The Remix';
 
 // ===================== STATE =====================
